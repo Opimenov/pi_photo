@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-
+from PIL import Image
+import cStringIO
+import io
 import os
 import smtplib
 import time
@@ -9,14 +11,10 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 
-# TODO:
-# take a picture
-# save it
-# check internet connection
-# if available send email
-# else wait for some time
+# IMPROVEMENTS:
+# log every error that occured along with times when internet connection was good
+# once a week send this log over email for maintanence
 
-EMAIL_SENT = False
 
 def have_internet(host="8.8.8.8", port=53, timeout=3):
     """
@@ -30,64 +28,58 @@ def have_internet(host="8.8.8.8", port=53, timeout=3):
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host,port))
         return True
     except Exception as ex:
-        print ex.message + "no connection"
+        print ex.message + " no connection. "
         return False
 
 def take_picture(path="/home/alex/Downloads/photo.png"):
-    print "taking picture"
-    camera = cv2.VideoCapture(0)
-    time.sleep(0.1)
-    return_value, image = camera.read()
-    cv2.imwrite(path, image) #writes an image to disk
-    del(camera)
+    try:
+        camera = cv2.VideoCapture(0)
+        time.sleep(0.1)
+        ret_val,image = camera.read()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = Image.fromarray(image)
+        image_memo = cStringIO.StringIO()
+        image.save(image_memo,"PNG")
+        mime_image = MIMEImage(image_memo.getvalue())
+        image_memo.close()
+        del(camera)
+        return mime_image
+    except Exception as ex:
+        print ex.message + " failed to take picture. "
 
-def send_mail(file_path="/home/alex/Downloads/photo.png"):
+def send_mail(image):
     From = 'ghana.sms.project@gmail.com'
-    #print 'From' + From
-    To   = 'pialgi@live.com' #'andrew_exe@hotmail.com'
-    #print 'To' + To
-    #email content 
-    img_data = open(file_path, 'rb').read()
-    #print 'opened image'
+    To   = 'pialgi@live.com'
     msg = MIMEMultipart()
     msg['Subject'] = 'this is a test picture'
-    #print 'subject setup'
     msg['From'] = From
     msg['To'] = To
     text = MIMEText("test sending photo")
     msg.attach(text)
-    #print 'attached text'
-    image = MIMEImage(img_data, name=os.path.basename(file_path))
     msg.attach(image)
-    #print 'attached image'
 
     #SMTP server 
     server = 'smtp.gmail.com:587'
     user_name = "ghana.sms.project@gmail.com"
     user_password = "ghanasmsproject"
     s = smtplib.SMTP(server)
-    #print 'server created'
     s.starttls()
     s.login(user_name, user_password)
-    #print 'logged in'
     s.sendmail(From, To, msg.as_string())
-    print 'email sent'
     s.quit()
-    EMAIL_SENT = True
 
 if __name__ == '__main__':
     MAX_TRIES = 20
     tried = 0
-    take_picture()
     while tried < MAX_TRIES:
         if have_internet():
-            send_mail()
+            send_mail(take_picture())
             break
         else:
             tried = triepd + 1
             print "waiting"
             time.sleep(5)
-    os.system("poweroff")
+    #os.system("poweroff")
         
         
 
