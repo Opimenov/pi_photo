@@ -59,8 +59,8 @@ def send_mail(image):
 
         # SMTP server
         server = 'smtp.gmail.com:587'
-        user_name = "ghana.sms.project@gmail.com"
-        user_password = "ghanasmsproject"
+        user_name = ""### FIXME enter email !!!!!!!!!!!!!!!!!!!!!!!
+        user_password = "" ### FIXME enter password !!!!!!!!!!!!!!!!!!!!!!!
         s = smtplib.SMTP(server)
         s.starttls()
         s.login(user_name, user_password)
