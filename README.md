@@ -1,9 +1,9 @@
 # pi_photo
-####Problem. 
+#### Problem. 
 How do we receive
 a picture of a particular location via email every
 24 hours to monitor objects condition? 
-####Solution:
+#### Solution:
 
 Raspberry pi with a camera, bullet M4 network module,
 solar panel + rechargeable battery, voltage regulator,
