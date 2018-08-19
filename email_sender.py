@@ -11,10 +11,6 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 
-# IMPROVEMENTS:
-# log every error that occured along with times when internet connection was good
-# once a week send this log over email for maintanence
-
 
 def have_internet(host="8.8.8.8", port=53, timeout=3):
     """
@@ -31,7 +27,8 @@ def have_internet(host="8.8.8.8", port=53, timeout=3):
         print ex.message + " no connection. "
         return False
 
-def take_picture(path="/home/alex/Downloads/photo.png"):
+
+def take_picture():
     try:
         camera = cv2.VideoCapture(0)
         time.sleep(0.1)
@@ -42,43 +39,48 @@ def take_picture(path="/home/alex/Downloads/photo.png"):
         image.save(image_memo,"PNG")
         mime_image = MIMEImage(image_memo.getvalue())
         image_memo.close()
-        del(camera)
+        del camera
         return mime_image
     except Exception as ex:
         print ex.message + " failed to take picture. "
 
-def send_mail(image):
-    From = 'ghana.sms.project@gmail.com'
-    To   = 'pialgi@live.com'
-    msg = MIMEMultipart()
-    msg['Subject'] = 'this is a test picture'
-    msg['From'] = From
-    msg['To'] = To
-    text = MIMEText("test sending photo")
-    msg.attach(text)
-    msg.attach(image)
 
-    #SMTP server 
-    server = 'smtp.gmail.com:587'
-    user_name = "ghana.sms.project@gmail.com"
-    user_password = "ghanasmsproject"
-    s = smtplib.SMTP(server)
-    s.starttls()
-    s.login(user_name, user_password)
-    s.sendmail(From, To, msg.as_string())
-    s.quit()
+def send_mail(image):
+    try:
+        from_ = 'ghana.sms.project@gmail.com'
+        to_ = 'pialgi@live.com'
+        msg = MIMEMultipart()
+        msg['Subject'] = 'this is a test picture'
+        msg['From'] = from_
+        msg['To'] = to_
+        text = MIMEText("test sending photo")
+        msg.attach(text)
+        msg.attach(image)
+
+        # SMTP server
+        server = 'smtp.gmail.com:587'
+        user_name = "ghana.sms.project@gmail.com"
+        user_password = "ghanasmsproject"
+        s = smtplib.SMTP(server)
+        s.starttls()
+        s.login(user_name, user_password)
+        s.sendmail(from_, to_, msg.as_string())
+        s.quit()
+    except Exception as ex:
+        print ex.message + " failed to send an email. "
+
 
 if __name__ == '__main__':
-    MAX_TRIES = 20
+    MAX_TRIES = 10
     tried = 0
     while tried < MAX_TRIES:
         if have_internet():
             send_mail(take_picture())
             break
         else:
-            tried = triepd + 1
+            tried = tried + 1
             print "waiting"
-            time.sleep(5)
+            time.sleep(60)
     #os.system("poweroff")
         
         
